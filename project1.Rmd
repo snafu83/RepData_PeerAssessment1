@@ -6,9 +6,13 @@ output:
 
 ## Loading and preprocessing data
 
-At first a check whether the dataset is existing in this directory is necessary. If the directory does not contain the dataset it will be downloaded from the source. Be aware that in this case the working directory was not changed, i.e. the preset directory is used. Alternatively a new directory could be created with create.dir() as well but in this case the simple approach was chosen. The procedure is similar to checking the existence of a file but with the command dir.exists().
+At first all packages needed for the analysis are loaded and a check whether the dataset is existing in this directory is necessary. If the directory does not contain the dataset it will be downloaded from the source. Be aware that in this case the working directory was not changed, i.e. the preset directory is used.
 
 ```{r, cache = TRUE}
+library(data.table)
+library(dplyr)
+library(lubridate)
+
 if(!(file.exists("activity.csv"))){
   file.url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
   download.file(file.url, destfile = "repdata_data_activity.zip", method = "curl")
@@ -30,7 +34,6 @@ Summary() and str() was used to get a first overview of the dataset. It can seen
 Next step is to convert the original date and interval into a valid date format. Therefore the date column is converted into a date format with as.POSIXct() first. As next step the interval is transformed in a readable string of characters based on how many digits the original integer number has. As last the day and time columns are combined in the date column as POSIXct and a column is added for the weekday and the week.
 
 ```{r, cache = TRUE}
-library(data.table)
 dat$day <- as.POSIXct(dat$date, tz = "UTC")
 
 n <- dim(dat)[1]
@@ -60,8 +63,6 @@ str(dat)
 The day column is used to group the days (group_by) and calculate the sum of steps per day (summarize & sum). Therefore the dplyr package was loaded and used. As last three histograms where printed using the subdividing via par(mfrow = c(1, 3)) and different breaks, 5, 10 and 20 respectively.
 
 ```{r, cache = TRUE, fig.height = 6, fig.width = 10}
-library(dplyr)
-
 steps <- dat %>%
   select(steps, day) %>%
   group_by(day) %>%
@@ -159,24 +160,28 @@ steps1.max <- max(dat.new1$steps, na.rm = TRUE)
 
 The really difference between the original and the modified dataset can be seen when the activity pattern is plotted over time. Some gaps, like the one at the start of the plot, show a spike in the modified dataset as expected. The mean number of steps stays roughly constant, `r round(steps.mean, 3)` and `r round(steps1.mean, 3)` respectively, as well as the median, `r steps.median` and `r steps1.median` respectively.  
 
-```{r, cache = TRUE, fig.height = 6, fig.width = 10}
-par(mfrow = c(1, 2), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
-with(dat,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "Date", ylab = "# of steps per 5 min interval", main = "Original dataset", cex.main = .75))
+```{r, cache = TRUE, fig.height = 12, fig.width = 10}
+
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(2, 0, 2, 0))
+with(dat,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "", ylab = "# of steps per 5 min interval", main = "Original dataset", cex.main = .75))
 abline(h = steps.mean, col = "red", lty = 3)
 abline(h = steps.median, col = "blue", lty = 3)
-abline(h = steps.max, col = "green", lty = 3)
-legend("topright", lty = 3, bty = "n", cex = .75, col = c("red", "blue", "green"), legend = c("Mean", "Median", "Max"))
+abline(h = steps.max, col = "purple", lty = 3)
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
 with(dat.new1,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "Date", ylab = "# of steps per 5 min interval", main = "Modified dataset", cex.main = .75))
 abline(h = steps1.mean, col = "red", lty = 3)
 abline(h = steps1.median, col = "blue", lty = 3)
-abline(h = steps1.max, col = "green", lty = 3)
-legend("topright", lty = 3, bty = "n", cex = .75, col = c("red", "blue", "green"), legend = c("Mean", "Median", "Max"))
+abline(h = steps1.max, col = "purple", lty = 3)
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
 mtext("Number of steps per 5 min interval between 01/10/2012 and 30/11/2012", outer = TRUE)
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottomright", c("Mean", "Median", "Max", "Days conatining NA's"), xpd = TRUE, horiz = TRUE, inset = c(0, 0), bty = "n", lty = c(3, 3, 3, 1), col = c("red", "blue", "purple", "green"), cex = 1)
 ```
 
 ## Difference in the activity between weekdays and weekends
 
-An additional column was added to the original dataset and approach one containing a factor variable dividing the days in weekdays and weekend.  
+An additional column was added to the original dataset and approach one containing a factor variable dividing the days in weekdays and weekend. The graph shows both datasets, the original and modified one, and highlights weekdays and weekends.   
 
 ```{r, cache = TRUE}
 for (i in 1:n){
@@ -190,18 +195,40 @@ for (i in 1:n){
 }
 ```
 
-```{r, fig.height = 12, fig.width = 10}
+```{r, cache = TRUE, fig.height = 12, fig.width = 10}
 lim.date <- c(as.POSIXct("2012-09-30"), as.POSIXct("2012-12-01"))
-par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(2, 0, 2, 0))
 with(dat,plot(steps[tow == "weekend"]~date[tow == "weekend"],
               type = "l", ylim = c(0, 1000), xlim = lim.date, xlab = "Date",
               ylab = "# of steps per 5 min interval", main = "Original dataset", cex.main = .75))
 with(dat, lines(steps[tow == "weekday"]~date[tow == "weekday"], col = "red"))
-legend("topright", lty = 1, bty = "n", cex = .75, col = c("black", "red"), legend = c("Weekend", "Weekday"))
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
 with(dat.new1,plot(steps[tow == "weekend"]~date[tow == "weekend"],
               type = "l", ylim = c(0, 1000), xlim = lim.date, xlab = "Date", col = "black",
               ylab = "# of steps per 5 min interval", main = "Modified dataset", cex.main = .75))
 with(dat.new1, lines(steps[tow == "weekday"]~date[tow == "weekday"], col = "red"))
-legend("topright", lty = 1, bty = "n", cex = .75, col = c("black", "red"), legend = c("Weekend", "Weekday"))
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
 mtext("Number of steps per 5 min interval between 01/10/2012 and 30/11/2012 \n Difference between original and modified dataset", outer = TRUE)
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottomright", c("Weekend", "Weekday"), xpd = TRUE, horiz = TRUE, inset = c(0, 0), bty = "n", lty = 1, col = c("black", "red"), cex = 1)
 ```
+
+```{r, cache = TRUE}
+steps.weekday1 <- dat %>%
+  select(steps, tow) %>%
+  group_by(tow) %>%
+  summarize(steps = mean(steps, na.rm = TRUE))
+
+steps.weekday2 <- dat.new1 %>%
+  select(steps, tow) %>%
+  group_by(tow) %>%
+  summarize(steps = mean(steps, na.rm = TRUE))
+
+print(merge(steps.weekday1, steps.weekday2, by = "tow") %>%
+        mutate(PartofWeek = tow, MeanStepsOriginal = round(steps.x, 1),
+               MeanStepsModified = round(steps.y, 1)) %>%
+        select(PartofWeek, MeanStepsOriginal , MeanStepsModified))
+```
+
+The average number of steps does not change to much between the original dataset  and the modified one, but the number of steps at the weekend is much higher then during the week.

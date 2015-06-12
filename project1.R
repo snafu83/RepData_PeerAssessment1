@@ -140,20 +140,21 @@ for (i in 1:n){
   }
 }
 
-par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(2, 1, 2, 1))
 with(dat,plot(steps[tow == "weekend"]~date[tow == "weekend"],
-              type = "l", ylim = c(0, 1000), xlim = c(as.POSIXct("2012-09-29"), as.POSIXct("2012-12-02")), xlab = "Date",
+              type = "l", ylim = c(0, 1000), xlim = c(as.POSIXct("2012-09-30"), as.POSIXct("2012-12-01")), xlab = "",
               ylab = "# of steps per 5 min interval", main = "Original dataset", cex.main = .75))
 with(dat, lines(steps[tow == "weekday"]~date[tow == "weekday"], col = "red"))
-abline(v = c(day.na$day[day.na$date.na == TRUE], day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
-legend("topright", lty = 1, bty = "n", cex = .75, col = c("black", "red"), legend = c("Weekend", "Weekday"))
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
 with(dat.new1,plot(steps[tow == "weekend"]~date[tow == "weekend"],
-              type = "l", ylim = c(0, 1000), xlim = c(as.POSIXct("2012-09-29"), as.POSIXct("2012-12-02")), xlab = "Date",
+              type = "l", ylim = c(0, 1000), xlim = c(as.POSIXct("2012-09-30"), as.POSIXct("2012-12-01")), xlab = "Date",
               ylab = "# of steps per 5 min interval", main = "Modified dataset", cex.main = .75))
 with(dat.new1, lines(steps[tow == "weekday"]~date[tow == "weekday"], col = "red"))
 abline(v = c(day.na$day[day.na$date.na == TRUE], day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
-legend("topright", bty = "n",lty = 1, cex = .75, box.col = "white", col = c("black", "red"), legend = c("Weekend", "Weekday"), bg = "white")
 mtext("Number of steps per 5 min interval between 01/10/2012 and 30/11/2012 \n Difference between original and modified dataset", outer = TRUE)
+par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
+plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
+legend("bottomright", c("Weekend", "Weekday"), xpd = TRUE, horiz = TRUE, inset = c(0, 0), bty = "n", lty = 1, col = c("black", "red"), cex = 1)
 
 steps.weekday1 <- dat %>%
   select(steps, tow) %>%
@@ -164,6 +165,11 @@ steps.weekday2 <- dat.new1 %>%
   select(steps, tow) %>%
   group_by(tow) %>%
   summarize(steps = mean(steps, na.rm = TRUE))
+
+print(merge(steps.weekday1, steps.weekday2, by = "tow") %>%
+        mutate(PartofWeek = tow, MeanStepsOriginal = round(steps.x, 1),
+               MeanStepsModified = round(steps.y, 1)) %>%
+        select(PartofWeek, MeanStepsOriginal , MeanStepsModified))
 
 day.na <- dat %>%
   select(steps, day) %>%

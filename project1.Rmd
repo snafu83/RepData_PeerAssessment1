@@ -62,7 +62,7 @@ str(dat)
 
 The day column is used to group the days (group_by) and calculate the sum of steps per day (summarize & sum). Therefore the dplyr package was loaded and used. As last three histograms where printed using the subdividing via par(mfrow = c(1, 3)) and different breaks, 5, 10 and 20 respectively.
 
-```{r figure1, fig.height = 6, fig.width = 10, cache = TRUE}
+```{r figure1, fig.height = 5, fig.width = 10, cache = TRUE}
 steps <- dat %>%
   select(steps, day) %>%
   group_by(day) %>%
@@ -93,13 +93,15 @@ steps.max <- max(dat$steps, na.rm = TRUE)
 steps.max.date <- dat[which(dat$steps == steps.max), ]
 steps.null <- sum(dat$steps == 0, na.rm = TRUE)
 ```
-```{r figure2, fig.height = 6, fig.width = 10}
+```{r figure2, fig.height = 5, fig.width = 10}
 par(mfrow = c(1, 1), mar = c(4, 4, 2, 1))
-with(dat,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "Date", ylab = "# of steps per 5 min interval", main = "Number of steps per 5 min interval between 01/10/2012 and 30/11/2012"))
+with(dat,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "Date",
+              ylab = "# of steps per 5 min interval", main = "Number of steps per 5 min interval between 01/10/2012 and 30/11/2012"))
 abline(h = steps.mean, col = "red", lty = 3)
 abline(h = steps.median, col = "blue", lty = 3)
 abline(h = steps.max, col = "green", lty = 3)
-legend("topright", lty = 3, bty = "n", cex = 1, col = c("red", "blue", "green"), legend = c("Mean", "Median", "Max"))
+legend("topright", lty = 3, bty = "n", cex = 1, col = c("red", "blue", "green"),
+       legend = c("Mean", "Median", "Max"))
 ```
 ![Figure 2](project1_files/figure-html/figure2-1.png) 
 The graph shows clearly that there are days with missing data. Due to the heavily skewed data, i.e. `r steps.null` values are equal to zero. Therefore the median (blue dotted line) is `r steps.median` and the mean (red dotted line) is `r round(steps.mean, 0)`. The maximum of steps is `r steps.max` which occurred on `r steps.max.date$date`.
@@ -140,18 +142,22 @@ mdsteps1 <- format(median(steps1$steps, na.rm = TRUE), digits = 5, scientific = 
 mnsteps2 <- format(mean(steps2$steps, na.rm = TRUE), digits = 4, scientific = FALSE)
 mdsteps2 <- format(median(steps2$steps, na.rm = TRUE), digits = 5, scientific = FALSE)
 
-overview <- data.frame(original = c(mnsteps, mdsteps, sum(dat$steps, na.rm = TRUE)), Approach1 = c(mnsteps1, mdsteps1, sum(dat.new1$steps)), Approach2 = c(mnsteps2, mdsteps2, sum(dat.new2$steps)), row.names = c("mean", "median", "total"))
+overview <- data.frame(original = c(mnsteps, mdsteps, sum(dat$steps, na.rm = TRUE)),
+                       Approach1 = c(mnsteps1, mdsteps1, sum(dat.new1$steps)),
+                       Approach2 = c(mnsteps2, mdsteps2, sum(dat.new2$steps)),
+                       row.names = c("mean", "median", "total"))
 print(overview)
 ```
 
 Overall there are `r steps.na` missing values which were replaced in two different ways. The table shows that, as expected, the approach 2, replacement with 0, changes nothing since we are looking at total days. The same can be seen in the histogram. The mean, median and total number of steps over the two month  are all increased by replacing the missing values by averages as expected.
 
-```{r figure3, cache = TRUE, fig.height = 6, fig.width = 10}
+```{r figure3, cache = TRUE, fig.height = 5, fig.width = 10}
 par(mfrow= c(1, 3), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
 hist(steps$steps, breaks = 10, xlab = "Steps", main = "Original dataset")
 hist(steps1$steps, breaks = 10, xlab = "Steps", main = "Approach 1")
 hist(steps2$steps, breaks = 10, xlab = "Steps", main = "Approach 2")
-mtext("Histogram for sum of steps per day comparing the original dataset with the two different approaches", outer = TRUE)
+mtext("Histogram for sum of steps per day comparing the original dataset with the two different approaches",
+      outer = TRUE)
 ```
 ![Figure 3](project1_files/figure-html/figure3-1.png) 
 ```{r, cache = TRUE}
@@ -162,23 +168,29 @@ steps1.max <- max(dat.new1$steps, na.rm = TRUE)
 
 The really difference between the original and the modified dataset can be seen when the activity pattern is plotted over time. Some gaps, like the one at the start of the plot, show a spike in the modified dataset as expected. The mean number of steps stays roughly constant, `r round(steps.mean, 3)` and `r round(steps1.mean, 3)` respectively, as well as the median, `r steps.median` and `r steps1.median` respectively.  
 
-```{r figure4, cache = TRUE, fig.height = 12, fig.width = 10}
+```{r figure4, cache = TRUE, fig.height = 10, fig.width = 10}
 
 par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(2, 0, 2, 0))
-with(dat,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "", ylab = "# of steps per 5 min interval", main = "Original dataset", cex.main = .75))
+with(dat,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "",
+              ylab = "# of steps per 5 min interval", main = "Original dataset", cex.main = .75))
 abline(h = steps.mean, col = "red", lty = 3)
 abline(h = steps.median, col = "blue", lty = 3)
 abline(h = steps.max, col = "purple", lty = 3)
-abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
-with(dat.new1,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "Date", ylab = "# of steps per 5 min interval", main = "Modified dataset", cex.main = .75))
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)),
+       col = "green")
+with(dat.new1,plot(steps~date, type = "l", ylim = c(0, 1000), xlab = "Date",
+                   ylab = "# of steps per 5 min interval", main = "Modified dataset", cex.main = .75))
 abline(h = steps1.mean, col = "red", lty = 3)
 abline(h = steps1.median, col = "blue", lty = 3)
 abline(h = steps1.max, col = "purple", lty = 3)
-abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)),
+       col = "green")
 mtext("Number of steps per 5 min interval between 01/10/2012 and 30/11/2012", outer = TRUE)
 par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
 plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-legend("bottomright", c("Mean", "Median", "Max", "Days conatining NA's"), xpd = TRUE, horiz = TRUE, inset = c(0, 0), bty = "n", lty = c(3, 3, 3, 1), col = c("red", "blue", "purple", "green"), cex = 1)
+legend("bottomright", c("Mean", "Median", "Max", "Days conatining NA's"), xpd = TRUE, horiz = TRUE,
+       inset = c(0, 0), bty = "n", lty = c(3, 3, 3, 1), col = c("red", "blue", "purple", "green"),
+       cex = 1)
 ```
 ![Figure 4](project1_files/figure-html/figure4-1.png) 
 ## Difference in the activity between weekdays and weekends
@@ -197,23 +209,26 @@ for (i in 1:n){
 }
 ```
 
-```{r figure5, cache = TRUE, fig.height = 12, fig.width = 10}
+```{r figure5, cache = TRUE, fig.height = 10, fig.width = 10}
 lim.date <- c(as.POSIXct("2012-09-30"), as.POSIXct("2012-12-01"))
 par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(2, 0, 2, 0))
 with(dat,plot(steps[tow == "weekend"]~date[tow == "weekend"],
               type = "l", ylim = c(0, 1000), xlim = lim.date, xlab = "Date",
               ylab = "# of steps per 5 min interval", main = "Original dataset", cex.main = .75))
 with(dat, lines(steps[tow == "weekday"]~date[tow == "weekday"], col = "red"))
-abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)),
+       col = "green")
 with(dat.new1,plot(steps[tow == "weekend"]~date[tow == "weekend"],
               type = "l", ylim = c(0, 1000), xlim = lim.date, xlab = "Date", col = "black",
               ylab = "# of steps per 5 min interval", main = "Modified dataset", cex.main = .75))
 with(dat.new1, lines(steps[tow == "weekday"]~date[tow == "weekday"], col = "red"))
-abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)), col = "green")
+abline(v = c(day.na$day[day.na$date.na == TRUE], lty = 3, day.na$day[day.na$date.na == TRUE] + days(1)),
+       col = "green")
 mtext("Number of steps per 5 min interval between 01/10/2012 and 30/11/2012 \n Difference between original and modified dataset", outer = TRUE)
 par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
 plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-legend("bottomright", c("Weekend", "Weekday"), xpd = TRUE, horiz = TRUE, inset = c(0, 0), bty = "n", lty = 1, col = c("black", "red"), cex = 1)
+legend("bottomright", c("Weekend", "Weekday"), xpd = TRUE, horiz = TRUE, inset = c(0, 0),
+       bty = "n", lty = 1, col = c("black", "red"), cex = 1)
 ```
 ![Figure 5](project1_files/figure-html/figure5-1.png) 
 ```{r, cache = TRUE}
